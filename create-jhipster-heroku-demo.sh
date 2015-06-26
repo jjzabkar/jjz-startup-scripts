@@ -29,6 +29,7 @@ function installJHipsterDependencies(){
 		npm install -g gulp
 		#JHipster
 		npm install -g generator-jhipster
+		npm update -g generator-jhipster
 	#Spring boot:
 	brew tap pivotal/tap;
 	brew install springboot;
@@ -48,7 +49,14 @@ function createJHipsterApp(){
 	echo "*~" >> .gitignore ; #jedit
 	echo "#*#" >> .gitignore ; #jedit
 	echo "tmp/" >> .gitignore ; 
-	echo "node_modules/" >> .gitignore;
+	# NOWORKY: Induces timeout errors since it lengthens the build > 60 seconds.
+	# echo "node_modules/" >> .gitignore; # NOWORKY
+	echo "; Specific node_modules required to shorten Heroku build time (avoid 60s timeout)" >> .gitignore;
+	echo "node_modules/bower/" >> .gitignore; # 36 MB; required to shorten build time (avoid 60s timeout)
+	echo "node_modules/generator-jhipster/" >> .gitignore; # 65 MB; required to shorten build time (avoid 60s timeout)
+	echo "node_modules/grunt-browser-sync/" >> .gitignore; # 33 MB; required to shorten build time (avoid 60s timeout)
+	echo "node_modules/grunt-contrib-imagemin/" >> .gitignore; # 50 MB; required to shorten build time (avoid 60s timeout)
+	echo "node_modules/yo/" >> .gitignore; # 21 MB; required to shorten build time (avoid 60s timeout)
 	echo "src/main/webapp/bower_components/" >> .gitignore;
 	echo "target/" >> .gitignore ; 
 	git add .gitignore;
@@ -67,23 +75,6 @@ function prepareForHeroku(){
 	heroku accounts || (echo "heroku account required" && exit 1 );
 	if [[ ! -f "./bower.json" || ! -f "./Gruntfile.js" || ! -f "./pom.xml" ]] ; then echo "createJHipsterApp required"; exit 1 ; fi ;
 	yo jhipster:heroku || exit 1 ; #prompts
-	#git add .;
-	#git commit -m "Prepared for Heroku"
-	# heroku apps:destroy --app jhipsterherokudemojjz --confirm jhipsterherokudemojjz
-
-	#remote:        https://sheltered-journey-3212.herokuapp.com/ deployed to Heroku
-	#remote: 
-	#-----> Done
-	#
-	#Your app should now be live. To view it run
-	#	heroku open
-	#And you can view the logs with this command
-	#	heroku logs --tail
-	#After application modification, repackage it with
-	#	mvn package -Pprod -DskipTests
-	#And then re-deploy it with
-	#	mvn package -Pprod -DskipTests=true && heroku deploy:jar --jar target/*.war
-	
 	git add .;
 	git commit -m "Prepared for Heroku";
 	#To see app name:
@@ -154,14 +145,16 @@ function deployWithGit(){
 	heroku config:set MAVEN_CUSTOM_OPTS="-Pprod,heroku -DskipTests"
 	# prepare the NPM configuration so that Heroku can use Bower and Grunt
 	npm install bower grunt-cli --save
-	# Since we saw this error in the UI
-	npm install iconv --save
 	
 	updatePomXml ; # possible: XML CLI? brew install xmlstarlet
 	
 	git add package.json pom.xml;
 	git commit -m "Update for Heroku Git"
-	git push heroku master;
+	git push heroku master; # takes 10-15 minutes, will time-out with error:
+	# Error R10 (Boot timeout) -> Web process failed to bind to $PORT within 60 seconds of launch
+	# Stopping process with SIGKILL
+	# State changed from starting to crashed
+	# Process exited with status 137
 	heroku open
 } # end deployWithGit()
 
