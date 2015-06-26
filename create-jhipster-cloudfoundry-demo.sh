@@ -86,9 +86,19 @@ function addServiceNewRelic(){
 } # function addServiceNewRelic()
 
 
+function addEntityFoo(){
+	yo jhipster:entity foo; #prompts
+	git add .;
+	git commit -m "Added entity 'foo'";
+	mvn -Pprod package;
+	#cf push -f ./deploy/cloudfoundry/manifest.yml -p target/*.war;
+	# per: https://jhipster.github.io/cloudfoundry.html
+}
+
 
 installCloudFoundryDependencies ;
 createJHipsterApp ;
+addEntityFoo ;
 deployToCloudFoundry ;
 addServiceNewRelic ;
 
