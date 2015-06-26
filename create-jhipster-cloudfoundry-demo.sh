@@ -5,7 +5,7 @@
 # See: https://jhipster.github.io/cloudfoundry.html
 #
 # yo jhipster:cloudfoundry
-
+APP_NAME=''
 function installCloudFoundryDependencies(){ 
 	brew tap pivotal/tap;
 	brew install cloudfoundry-cli;
@@ -73,13 +73,22 @@ function deployToCloudFoundry(){
 	cf orgs || (echo "error: cloudfoundry login, 'orgs' required" && exit 1);
 	if [[ ! -f "./bower.json" || ! -f "./Gruntfile.js" || ! -f "./pom.xml" ]] ; then echo "createJHipsterApp required"; exit 1 ; fi ;
 	yo jhipster:cloudfoundry || exit 1 ; # prompts
-	
-	
 } # deployToCloudFoundry ; 
+
+
+function addServiceNewRelic(){
+	which jq || (echo "jq required" && exit 1 );
+	APP_NAME=`cat .yo-rc.json | jq -r '."generator-jhipster"."baseName"'`;
+	SERVICE_NAME="${APP_NAME}-newrelic";
+	cf create-service newrelic standard ${SERVICE_NAME};
+	cf bind-service ${APP_NAME} ${SERVICE_NAME};
+	cf restage ${APP_NAME};	
+} # function addServiceNewRelic()
 
 
 
 installCloudFoundryDependencies ;
 createJHipsterApp ;
 deployToCloudFoundry ;
+addServiceNewRelic ;
 
