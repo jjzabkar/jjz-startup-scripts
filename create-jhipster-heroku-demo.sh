@@ -39,18 +39,17 @@ function installJHipsterDependencies(){
 
 function createJHipsterApp(){
 	#https://jkutner.github.io/2015/05/25/jhipster-heroku-git.html
-	#pushd ~/Documents/git/jhipster-heroku-demo
 	which yo || (echo "yeoman required" && exit 1 );
-	#initialize git repo
-	#git init;
 	#create jhipster app (prompts)
 	yo jhipster || exit 1 ;
+	#initialize git repo
+	git init;
 	#update gitignore
 	echo "*~" >> .gitignore ; #jedit
 	echo "#*#" >> .gitignore ; #jedit
 	echo "tmp/" >> .gitignore ; 
-	# NOWORKY: Induces timeout errors since it lengthens the build > 60 seconds.
-	# echo "node_modules/" >> .gitignore; # NOWORKY
+	# NOWORKY: Induces Heroku timeout errors since it lengthens the build > 60 seconds.
+	# echo "node_modules/" >> .gitignore; # NOWORKY ON HEROKU
 	echo "; Specific node_modules required to shorten Heroku build time (avoid 60s timeout)" >> .gitignore;
 	echo "node_modules/bower/" >> .gitignore; # 36 MB; required to shorten build time (avoid 60s timeout)
 	echo "node_modules/generator-jhipster/" >> .gitignore; # 65 MB; required to shorten build time (avoid 60s timeout)
@@ -61,6 +60,8 @@ function createJHipsterApp(){
 	echo "target/" >> .gitignore ; 
 	git add .gitignore;
 	git commit -m "Updated .gitignore with jhipster ignores";
+	git add node_modules/;
+	git commit -m "Added node_modules/ to reduce build time on destination";
 	git add .;
 	git commit -m "Created JHipster app";
 } # createJHipsterApp ;
